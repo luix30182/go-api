@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"mario-mtz.com/rest-api/db"
 	"mario-mtz.com/rest-api/models"
 )
 
 func main() {
+	db.InitDb()
 	server := gin.Default()
 
 	server.GET("/events", getEvents)
