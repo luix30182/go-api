@@ -1,6 +1,11 @@
 package models
 
-import "mario-mtz.com/rest-api/db"
+import (
+	"errors"
+
+	"mario-mtz.com/rest-api/db"
+	"mario-mtz.com/rest-api/utils"
+)
 
 type USER struct {
 	ID       int64
@@ -18,7 +23,12 @@ func (user USER) Save() error {
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(user.Email, user.Password)
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(user.Email, hashedPassword)
 
 	if err != nil {
 		return err
@@ -29,4 +39,25 @@ func (user USER) Save() error {
 	user.ID = userId
 
 	return err
+}
+
+func (user USER) ValidateCredentials() error {
+	query := "SELECT password FROM users WHERE email = ?"
+
+	row := db.DB.QueryRow(query, user.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&retrievedPassword)
+
+	if err != nil {
+		return errors.New("Invalid credentials")
+	}
+
+	passwordValid := utils.CheckPasswordHash(user.Password, retrievedPassword)
+
+	if !passwordValid {
+		return errors.New("Invalid credentials")
+	}
+
+	return nil
 }
