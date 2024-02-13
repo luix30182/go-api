@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"mario-mtz.com/rest-api/models"
-	"mario-mtz.com/rest-api/utils"
 )
 
 func GetEvents(context *gin.Context) {
@@ -37,25 +36,15 @@ func GetEvent(context *gin.Context) {
 }
 
 func CreateEvent(context *gin.Context) {
-	token := context.Request.Header.Get("Authorization")
-	if token == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
-		return
-	}
-
-	userId, err := utils.VerifyToken(token)
-	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
-
-		return
-	}
 
 	var event models.Event
-	err = context.ShouldBindJSON(&event)
+	err := context.ShouldBindJSON(&event)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Cold not parse request"})
 		return
 	}
+
+	userId := context.GetInt64("userId")
 
 	event.UserId = userId
 
